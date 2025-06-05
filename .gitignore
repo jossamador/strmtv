@@ -1,15 +1,14 @@
-*.iml
-.gradle
+# Archivos generados
+/build/
+.gradle/
 /local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-.DS_Store
-/build
 /captures
 .externalNativeBuild
-.cxx
-local.properties
+.idea/
+*.iml
+
+# Cache de Android Studio
+.idea/caches
+.idea/libraries
+.idea/modules.xml
+.idea/workspace.xml
