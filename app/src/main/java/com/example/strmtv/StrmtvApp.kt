@@ -1,4 +1,7 @@
 package com.example.strmtv
 
-class StrmtvApp {
-}
+import android.app.Application
+import dagger.hilt.android.HiltAndroidApp
+
+@HiltAndroidApp
+class StrmtvApp : Application()
