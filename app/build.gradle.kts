@@ -75,4 +75,7 @@ dependencies {
     // ✅ Jetpack Compose Navigation y ViewModel
     implementation("androidx.navigation:navigation-compose:2.7.3")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.1")
+
+    // Importación Hilt
+    implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
 }
