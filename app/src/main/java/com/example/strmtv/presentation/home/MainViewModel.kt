@@ -25,7 +25,7 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = UiState.Loading
             try {
-                val items = repository.getAllItems()
+                val items = repository.getItems()
                 _uiState.value = UiState.Success(items)
             } catch (e: Exception) {
                 _uiState.value = UiState.Error("Error al cargar datos: ${e.localizedMessage}")
