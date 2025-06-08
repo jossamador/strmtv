@@ -74,8 +74,8 @@ fun ItemCard(item: Item) {
     ) {
         Row(modifier = Modifier.padding(8.dp)) {
             Image(
-                painter = rememberAsyncImagePainter(model = item.poster),
-                contentDescription = "Poster de ${item.title}",
+                painter = rememberAsyncImagePainter(item.poster?.trim()),
+                contentDescription = null,
                 modifier = Modifier
                     .width(80.dp)
                     .height(120.dp)
