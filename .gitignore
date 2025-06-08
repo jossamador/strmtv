@@ -12,3 +12,7 @@
 .idea/libraries
 .idea/modules.xml
 .idea/workspace.xml
+
+# Ignorar configuraciones locales de Android Studio
+.idea/
+.kotlin/
