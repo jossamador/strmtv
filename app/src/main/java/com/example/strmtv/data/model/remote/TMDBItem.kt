@@ -9,8 +9,8 @@ data class TMDBItem(
     @SerializedName("name")
     val name: String? = null,
 
-    @SerializedName("poster")
-    val posterPath: String? = null,
+    @SerializedName("poster_path") // ← CORREGIDO
+    val poster: String? = null,
 
     @SerializedName("media_type")
     val mediaType: String? = null,
