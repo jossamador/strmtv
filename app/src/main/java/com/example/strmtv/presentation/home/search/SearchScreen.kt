@@ -5,96 +5,121 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
 import com.example.strmtv.data.model.Item
 import com.example.strmtv.data.model.remote.TMDBItem
+import com.example.strmtv.presentation.home.SharedViewModel
 import com.example.strmtv.presentation.home.navigation.Routes
-import android.net.Uri
 import java.net.URLEncoder
-import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.foundation.background
 
 @Composable
 fun SearchScreen(
     navController: NavHostController,
-    viewModel: SearchViewModel = hiltViewModel()
+    sharedViewModel: SharedViewModel,
+    searchViewModel: SearchViewModel = hiltViewModel()
 ) {
     var query by remember { mutableStateOf("") }
-    val uiState by viewModel.uiState.collectAsState()
-    val useLocalSource by viewModel.useLocalSource.collectAsState()
+    val uiState by searchViewModel.uiState.collectAsState()
+    val useLocalSource by searchViewModel.useLocalSource.collectAsState()
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
+    val tabs = listOf("Top Results", "TV Shows", "Movies", "Cast & Crew")
+    var selectedTabIndex by remember { mutableStateOf(0) }
+
+    Column(modifier = Modifier.fillMaxSize()) {
+
+        // Barra de búsqueda
         OutlinedTextField(
             value = query,
-            onValueChange = { query = it },
-            label = { Text("Buscar en TMDB o Local") },
-            modifier = Modifier.fillMaxWidth()
+            onValueChange = {
+                query = it
+                searchViewModel.search(query)
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp),
+            placeholder = { Text("Buscar en TMDB o Local") }
         )
+
+        // Botón para cambiar fuente
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp, vertical = 4.dp),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Button(
+                onClick = { searchViewModel.setUseLocalSource(true) },
+                enabled = !useLocalSource
+            ) {
+                Text("Buscar en Local")
+            }
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            Button(
+                onClick = { searchViewModel.setUseLocalSource(false) },
+                enabled = useLocalSource
+            ) {
+                Text("Buscar en TMDB")
+            }
+        }
+
+        // Tabs
+        TabRow(selectedTabIndex = selectedTabIndex) {
+            tabs.forEachIndexed { index, title ->
+                Tab(
+                    selected = selectedTabIndex == index,
+                    onClick = {
+                        selectedTabIndex = index
+                        searchViewModel.setUseLocalSource(index == 0)
+                    },
+                    text = { Text(title) }
+                )
+            }
+        }
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        Row(
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Button(
-                onClick = {
-                    if (query.isNotBlank()) {
-                        viewModel.search(query)
-                    }
-                },
-                modifier = Modifier.align(Alignment.CenterVertically)
-            ) {
-                Text("Buscar")
-            }
-
-            Spacer(modifier = Modifier.width(16.dp))
-
-            Text(text = if (useLocalSource) "Local" else "TMDB")
-            Switch(
-                checked = useLocalSource,
-                onCheckedChange = { viewModel.setUseLocalSource(it) }
-            )
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        when (val state = uiState) {
-            is SearchUiState.Idle -> {
-                Text("Escribe un título para buscar", style = MaterialTheme.typography.bodyLarge)
-            }
-
+        // Resultados
+        when (uiState) {
+            is SearchUiState.Idle -> {}
             is SearchUiState.Loading -> {
-                CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
             }
-
-            is SearchUiState.Error -> {
-                Text("Error: ${state.message}", color = MaterialTheme.colorScheme.error)
-            }
-
             is SearchUiState.SuccessLocal -> {
-                if (state.results.isEmpty()) {
-                    Text("No se encontraron resultados")
-                } else {
-                    ResultsListLocal(state.results, navController)
-                }
+                ResultsListLocal(
+                    results = (uiState as SearchUiState.SuccessLocal).results,
+                    navController = navController,
+                    sharedViewModel = sharedViewModel
+                )
             }
-
             is SearchUiState.SuccessTMDB -> {
-                if (state.results.isEmpty()) {
-                    Text("No se encontraron resultados")
-                } else {
-                    ResultsListTMDB(state.results, navController)
+                ResultsListTMDB(
+                    results = (uiState as SearchUiState.SuccessTMDB).results,
+                    navController = navController,
+                    sharedViewModel = sharedViewModel
+                )
+            }
+            is SearchUiState.Error -> {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text(text = "Error: ${(uiState as SearchUiState.Error).message}")
                 }
             }
         }
@@ -102,96 +127,146 @@ fun SearchScreen(
 }
 
 @Composable
-fun ResultsListLocal(results: List<Item>, navController: NavHostController) {
+fun ResultsListLocal(
+    results: List<Item>,
+    navController: NavHostController,
+    sharedViewModel: SharedViewModel
+) {
     LazyColumn(modifier = Modifier.fillMaxSize()) {
         items(results) { result ->
-            ResultItemLocal(result = result, navController = navController)
+            ResultItemLocal(result = result, navController = navController, sharedViewModel = sharedViewModel)
         }
     }
 }
 
 @Composable
-fun ResultsListTMDB(results: List<TMDBItem>, navController: NavHostController) {
+fun ResultsListTMDB(
+    results: List<TMDBItem>,
+    navController: NavHostController,
+    sharedViewModel: SharedViewModel
+) {
     LazyColumn(modifier = Modifier.fillMaxSize()) {
         items(results) { result ->
-            ResultItemTMDB(result = result, navController = navController)
+            ResultItemTMDB(result = result, navController = navController, sharedViewModel = sharedViewModel)
         }
     }
 }
 
 @Composable
-fun ResultItemLocal(result: Item, navController: NavHostController) {
+fun ResultItemLocal(
+    result: Item,
+    navController: NavHostController,
+    sharedViewModel: SharedViewModel
+) {
     Card(
+        shape = RoundedCornerShape(8.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp)
-            .clickable {
-                navController.navigate(
-                    "${Routes.DETAIL}/${Uri.encode(result.title)}/${Uri.encode(result.poster)}/${Uri.encode(result.year.toString())}/${Uri.encode(result.genre)}"
-                )
-            },
-        elevation = CardDefaults.cardElevation(4.dp)
+            .height(200.dp) // Tarjeta alta, como en Apple TV+
+            .padding(horizontal = 8.dp, vertical = 4.dp),
+        elevation = CardDefaults.cardElevation(0.dp), // sin sombra, estilo limpio
+        colors = CardDefaults.cardColors(
+            containerColor = Color.Transparent // imagen ocupa todo el card
+        )
     ) {
-        Row(modifier = Modifier.padding(8.dp)) {
+        Box {
             Image(
                 painter = rememberAsyncImagePainter(result.poster ?: ""),
                 contentDescription = null,
                 modifier = Modifier
-                    .width(80.dp)
-                    .height(120.dp)
+                    .fillMaxSize()
+                    .clip(RoundedCornerShape(8.dp)),
+                contentScale = ContentScale.Crop
             )
-
-            Spacer(modifier = Modifier.width(16.dp))
-
-            Text(
-                text = result.title ?: "Sin título",
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.align(Alignment.CenterVertically)
-            )
+            // Texto sobre la imagen (opcional)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.BottomStart)
+                    .background(Color(0x66000000)) // fondo semi-transparente
+                    .padding(8.dp)
+            ) {
+                Text(
+                    text = result.title ?: "Sin título",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.White
+                )
+            }
         }
     }
 }
 
-
 @Composable
-fun ResultItemTMDB(result: TMDBItem, navController: NavHostController) {
-    // Armamos el posterPath SIN el "/" inicial
-    val posterPath = result.poster?.removePrefix("/") ?: "no_image"
-    val posterUrl = if (posterPath == "no_image") "" else "https://image.tmdb.org/t/p/w500/$posterPath"
+fun ResultItemTMDB(
+    result: TMDBItem,
+    navController: NavHostController,
+    sharedViewModel: SharedViewModel
+) {
+    val posterPath = result.posterPath?.removePrefix("/") ?: ""
+    val posterUrl = "https://image.tmdb.org/t/p/w500/$posterPath"
 
-    // Codificamos los campos
-    val encodedPoster = URLEncoder.encode(posterPath, StandardCharsets.UTF_8.toString())
-    val encodedTitle = URLEncoder.encode(result.title ?: result.name ?: "Sin título", StandardCharsets.UTF_8.toString())
-    val encodedReleaseDate = URLEncoder.encode(result.releaseDate?.takeIf { it.isNotBlank() } ?: "Desconocido", StandardCharsets.UTF_8.toString())
-    val encodedOverview = URLEncoder.encode(result.overview?.takeIf { it.isNotBlank() } ?: "Sin descripción disponible.", StandardCharsets.UTF_8.toString())
+    val item = Item(
+        id = 0,
+        title = result.title ?: result.name ?: "",
+        type = result.mediaType ?: "",
+        year = 0,
+        genre = "",
+        genres = emptyList(),
+        poster = posterUrl,
+        backdrop = "",
+        overview = result.overview ?: "",
+        cast = emptyList(),
+        director = "",
+        mediaType = result.mediaType ?: "",
+        releaseDate = result.releaseDate ?: "",
+        duration = "",
+        rating = 0.0,
+        voteCount = 0,
+        language = "",
+        country = "",
+        trailerUrl = "",
+        availableOn = emptyList()
+    )
 
-    Card(
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp)
+            .padding(horizontal = 8.dp, vertical = 4.dp)
             .clickable {
-                navController.navigate(
-                    "${Routes.DETAIL}/$encodedTitle/$encodedPoster/$encodedReleaseDate/$encodedOverview"
-                )
-            },
-        elevation = CardDefaults.cardElevation(4.dp)
+                sharedViewModel.selectItem(item)
+                navController.navigate(Routes.DETAIL)
+            }
     ) {
-        Row(modifier = Modifier.padding(8.dp)) {
-            Image(
-                painter = rememberAsyncImagePainter(posterUrl),
-                contentDescription = null,
-                modifier = Modifier
-                    .width(80.dp)
-                    .height(120.dp)
+        Image(
+            painter = rememberAsyncImagePainter(posterUrl),
+            contentDescription = null,
+            modifier = Modifier
+                .size(100.dp)
+                .clip(MaterialTheme.shapes.medium)
+        )
+
+        Spacer(modifier = Modifier.width(12.dp))
+
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.CenterVertically)
+        ) {
+            Text(
+                text = item.title,
+                style = MaterialTheme.typography.titleMedium
             )
 
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.height(4.dp))
 
             Text(
-                text = result.title ?: result.name ?: "Sin título",
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.align(Alignment.CenterVertically)
+                text = item.mediaType,
+                style = MaterialTheme.typography.bodySmall
             )
+        }
+
+        IconButton(onClick = { /* TODO */ }) {
+            Icon(Icons.Default.MoreVert, contentDescription = "More")
         }
     }
 }

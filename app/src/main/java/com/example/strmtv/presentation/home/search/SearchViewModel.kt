@@ -43,4 +43,8 @@ class SearchViewModel @Inject constructor(
             }
         }
     }
+
+    fun toggleSource() {
+        _useLocalSource.value = !_useLocalSource.value
+    }
 }
