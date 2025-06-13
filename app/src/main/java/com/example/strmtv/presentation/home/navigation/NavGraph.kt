@@ -1,15 +1,15 @@
 package com.example.strmtv.presentation.home.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.navigation.NavHostController
-import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.navArgument
 import com.example.strmtv.presentation.home.HomeScreen
+import com.example.strmtv.presentation.home.SharedViewModel
 import com.example.strmtv.presentation.home.detail.DetailScreen
 import com.example.strmtv.presentation.home.search.SearchScreen
-import android.net.Uri
 
 object Routes {
     const val HOME = "home"
@@ -18,34 +18,29 @@ object Routes {
 }
 
 @Composable
-fun NavGraph(navController: NavHostController) {
+fun NavGraph(navController: NavHostController, sharedViewModel: SharedViewModel) {
     NavHost(navController = navController, startDestination = Routes.HOME) {
 
+        // HomeScreen SIN sharedViewModel (no lo necesita)
         composable(Routes.HOME) {
             HomeScreen(navController)
         }
 
-        composable(
-            route = "${Routes.DETAIL}/{title}/{poster}/{releaseDate}/{description}",
-            arguments = listOf(
-                navArgument("title") { type = NavType.StringType },
-                navArgument("poster") { type = NavType.StringType },
-                navArgument("releaseDate") { type = NavType.StringType },
-                navArgument("description") { type = NavType.StringType }
-            )
-        ) { backStackEntry ->
-            DetailScreen(
-                navController = navController,
-                poster = backStackEntry.arguments?.getString("poster"),
-                title = backStackEntry.arguments?.getString("title"),
-                releaseDate = backStackEntry.arguments?.getString("releaseDate"),
-                description = backStackEntry.arguments?.getString("description")
-            )
+        // DetailScreen usando collectAsState
+        composable(Routes.DETAIL) {
+            val item by sharedViewModel.selectedItem.collectAsState()
+
+            if (item != null) {
+                DetailScreen(
+                    item = item!!,
+                    onBack = { navController.popBackStack() }
+                )
+            }
         }
 
+        // SearchScreen con sharedViewModel (sí lo necesita para selectItem)
         composable(Routes.SEARCH) {
-            SearchScreen(navController)
+            SearchScreen(navController, sharedViewModel)
         }
     }
 }
-
