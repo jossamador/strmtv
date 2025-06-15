@@ -2,7 +2,6 @@ package com.example.strmtv.presentation.home.detail
 
 import android.content.Intent
 import android.net.Uri
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -11,7 +10,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -20,13 +19,26 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.example.strmtv.data.model.Item
-import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import com.example.strmtv.presentation.home.SharedViewModel
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import com.example.strmtv.presentation.home.RecommendationsUiState
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DetailScreen(item: Item, onBack: () -> Unit) {
+fun DetailScreen(
+    item: Item,
+    onBack: () -> Unit,
+    sharedViewModel: SharedViewModel = hiltViewModel()
+) {
     val context = LocalContext.current
+
+    LaunchedEffect(item.id) {
+        sharedViewModel.selectItem(item)
+    }
+
+    val recommendationsUiState by sharedViewModel.recoState.collectAsState()
 
     Scaffold(
         topBar = {
@@ -45,27 +57,24 @@ fun DetailScreen(item: Item, onBack: () -> Unit) {
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
         ) {
-            // Backdrop image
             AsyncImage(
                 model = item.backdrop,
-                contentDescription = "${item.title} backdrop",
+                contentDescription = "Backdrop",
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(220.dp)
             )
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-            // Poster + Main info
             Row(
-                modifier = Modifier
-                    .padding(horizontal = 16.dp),
+                modifier = Modifier.padding(horizontal = 16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 AsyncImage(
                     model = item.poster,
-                    contentDescription = "${item.title} poster",
+                    contentDescription = "Poster",
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .width(130.dp)
@@ -78,133 +87,106 @@ fun DetailScreen(item: Item, onBack: () -> Unit) {
                 Column {
                     Text(
                         text = "${item.title} (${item.year})",
-                        style = MaterialTheme.typography.titleLarge
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onBackground
                     )
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "Tipo: ${item.type}",
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                    Text(
-                        text = "Media: ${item.mediaType}",
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                    Text(
-                        text = "⭐ ${item.rating} (${item.voteCount} votos)",
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                    Text(
-                        text = "Duración: ${item.duration.ifBlank { "No disponible" }}",
-                        style = MaterialTheme.typography.bodySmall
-                    )
+                    Text("Tipo: ${item.type}", style = MaterialTheme.typography.bodySmall)
+                    Text("Media: ${item.mediaType}", style = MaterialTheme.typography.bodySmall)
+                    Text("⭐ ${item.rating} (${item.voteCount} votos)", style = MaterialTheme.typography.bodySmall)
+                    Text("Duración: ${item.duration ?: "No disponible"}", style = MaterialTheme.typography.bodySmall)
                 }
             }
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Genres & info
             Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-
                 if (item.genres.isNotEmpty()) {
-                    Text(
-                        text = "Géneros: ${item.genres.joinToString(", ")}",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
+                    Text("Géneros: ${item.genres.joinToString(", ")}", style = MaterialTheme.typography.bodyMedium)
                     Spacer(modifier = Modifier.height(8.dp))
                 }
 
-                Text(
-                    text = "Fecha de estreno: ${item.releaseDate.ifBlank { "No disponible" }}",
-                    style = MaterialTheme.typography.bodySmall
-                )
-                Text(
-                    text = "Idioma: ${item.language.ifBlank { "No disponible" }}",
-                    style = MaterialTheme.typography.bodySmall
-                )
-                Text(
-                    text = "País: ${item.country.ifBlank { "No disponible" }}",
-                    style = MaterialTheme.typography.bodySmall
-                )
+                Text("Fecha de estreno: ${item.releaseDate ?: "No disponible"}", style = MaterialTheme.typography.bodySmall)
+                Text("Idioma: ${item.language ?: "No disponible"}", style = MaterialTheme.typography.bodySmall)
+                Text("País: ${item.country ?: "No disponible"}", style = MaterialTheme.typography.bodySmall)
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // Director
-                if (item.director.isNotBlank()) {
-                    Text(
-                        text = "Director: ${item.director}",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
+                item.director?.let {
+                    Text("Director: $it", style = MaterialTheme.typography.bodyMedium)
                     Spacer(modifier = Modifier.height(8.dp))
                 }
 
-                // Cast
                 if (item.cast.isNotEmpty()) {
-                    Text(
-                        text = "Reparto:",
-                        style = MaterialTheme.typography.titleMedium
-                    )
+                    Text("Reparto:", style = MaterialTheme.typography.titleMedium)
                     Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = item.cast.joinToString(", "),
-                        style = MaterialTheme.typography.bodySmall
-                    )
+                    Text(item.cast.joinToString(", "), style = MaterialTheme.typography.bodySmall)
                     Spacer(modifier = Modifier.height(12.dp))
                 }
 
-                // Available on (chips)
                 if (item.availableOn.isNotEmpty()) {
-                    Text(
-                        text = "Disponible en:",
-                        style = MaterialTheme.typography.titleMedium
-                    )
+                    Text("Disponible en:", style = MaterialTheme.typography.titleMedium)
                     Spacer(modifier = Modifier.height(8.dp))
-
-                    FlowRow(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         item.availableOn.forEach { platform ->
-                            AssistChip(
-                                onClick = { /* No action for now */ },
-                                label = { Text(platform) }
-                            )
+                            AssistChip(onClick = {}, label = { Text(platform) })
                         }
                     }
-
                     Spacer(modifier = Modifier.height(16.dp))
                 }
 
-                // Trailer URL
-                if (item.trailerUrl.isNotBlank()) {
+                item.trailerUrl?.takeIf { it.isNotBlank() }?.let { url ->
                     Text(
                         text = "Ver tráiler",
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier
-                            .clickable {
-                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(item.trailerUrl))
-                                context.startActivity(intent)
-                            }
-                            .padding(vertical = 4.dp)
+                        modifier = Modifier.clickable {
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                            context.startActivity(intent)
+                        }
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                 }
 
-                // Overview
-                if (item.overview.isNotBlank()) {
-                    Text(
-                        text = "Descripción",
-                        style = MaterialTheme.typography.titleMedium
-                    )
+                item.overview?.let {
+                    Text("Descripción", style = MaterialTheme.typography.titleMedium)
                     Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = item.overview,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
+                    Text(it, style = MaterialTheme.typography.bodyMedium)
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                if (recommendationsUiState is RecommendationsUiState.Success) {
+                    val recommendedItems = (recommendationsUiState as RecommendationsUiState.Success).data
+                    Text("Recomendaciones similares", style = MaterialTheme.typography.titleMedium)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    LazyRow(contentPadding = PaddingValues(horizontal = 16.dp)) {
+                        items(recommendedItems) { recommended ->
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                modifier = Modifier.padding(end = 8.dp)
+                            ) {
+                                AsyncImage(
+                                    model = recommended.posterPath?.let { "https://image.tmdb.org/t/p/w500$it" }
+                                        ?: "https://via.placeholder.com/100x150", // o una imagen por defecto
+                                    contentDescription = recommended.title.orEmpty(),
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier
+                                        .size(width = 100.dp, height = 150.dp)
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .clickable { sharedViewModel.selectItem(item) }
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = recommended.title.orEmpty(),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    maxLines = 1
+                                )
+                            }
+                        }
+                    }
                 }
             }
-
-            Spacer(modifier = Modifier.height(32.dp))
         }
     }
 }
