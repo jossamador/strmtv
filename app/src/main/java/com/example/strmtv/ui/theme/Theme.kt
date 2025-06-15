@@ -11,32 +11,33 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
-// Colores oscuros tipo Apple TV+
+// Tema oscuro
 private val DarkColorScheme = darkColorScheme(
-    primary = Color(0xFFFFFFFF),              // Texto primario en botones o elementos destacados
-    secondary = Color(0xFFAAAAAA),            // Texto secundario o iconos secundarios
-    tertiary = Color(0xFF888888),             // Elementos terciarios, chips, etc.
-    background = Color(0xFF0F0F0F),            // Fondo general
-    surface = Color(0xFF1A1A1A),               // Fondo de tarjetas, barras
-    onPrimary = Color.Black,                   // Texto o icono encima de primary
-    onSecondary = Color.White,                 // Texto encima de secondary
+    primary = md_theme_dark_primary,
+    onPrimary = md_theme_dark_onPrimary,
+    background = md_theme_dark_background,
+    surface = md_theme_dark_surface,
+    onSurface = md_theme_dark_onSurface,
+    // Puedes mantener los demás valores como gustes:
+    secondary = Color(0xFFAAAAAA),
+    tertiary = Color(0xFF888888),
+    onSecondary = Color.White,
     onTertiary = Color.White,
-    onBackground = Color.White,                // Texto normal
-    onSurface = Color.White                    // Texto en tarjetas, botones, etc.
+    onBackground = Color.White,
 )
 
-// Colores claros (por si el sistema está en light mode, aunque Apple TV+ suele ser dark)
+// Tema claro
 private val LightColorScheme = lightColorScheme(
-    primary = Color(0xFF000000),               // Texto primario en botones
+    primary = md_theme_light_primary,
+    onPrimary = md_theme_light_onPrimary,
+    background = md_theme_light_background,
+    surface = md_theme_light_surface,
+    onSurface = md_theme_light_onSurface,
     secondary = Color(0xFF444444),
     tertiary = Color(0xFF666666),
-    background = Color(0xFFFFFFFF),            // Fondo claro
-    surface = Color(0xFFF0F0F0),               // Fondo de tarjetas claro
-    onPrimary = Color.White,
     onSecondary = Color.Black,
     onTertiary = Color.Black,
     onBackground = Color.Black,
-    onSurface = Color.Black
 )
 
 @Composable
