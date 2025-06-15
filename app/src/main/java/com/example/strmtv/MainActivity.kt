@@ -31,7 +31,7 @@ class MainActivity : ComponentActivity() {
             StrmtvTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = Color(0xFF0F0F0F) // Fondo Apple TV+
+                    color = MaterialTheme.colorScheme.background // ✅ Usa el fondo del tema activo
                 ) {
                     val navController = rememberNavController()
                     NavGraph(

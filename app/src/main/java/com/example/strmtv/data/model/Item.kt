@@ -9,16 +9,16 @@ data class Item(
     val genres: List<String>,
     val poster: String,
     val backdrop: String,
-    val overview: String,
+    val overview: String?,              // <- puede ser null
     val cast: List<String>,
-    val director: String,
-    val mediaType: String,  // (entiendo que es "movie" o "series")
-    val releaseDate: String,
-    val duration: String,
+    val director: String?,              // <- puede ser null
+    val mediaType: String,
+    val releaseDate: String?,           // <- puede ser null
+    val duration: String?,              // <- ya lo tenías nullable 👍
     val rating: Double,
     val voteCount: Int,
-    val language: String,
-    val country: String,
-    val trailerUrl: String,
+    val language: String?,              // <- puede ser null
+    val country: String?,               // <- puede ser null
+    val trailerUrl: String?,            // <- puede ser null
     val availableOn: List<String>
 )
