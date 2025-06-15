@@ -12,31 +12,37 @@ class ItemRepositoryImpl @Inject constructor(
     private val localApiService: LocalApiService
 ) : ItemRepository {
 
-    // Buscar en Local
     override suspend fun searchLocal(query: String): List<Item> {
         return try {
             localApiService.searchLocal(query)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             emptyList()
         }
     }
 
-    // Buscar en TMDB
     override suspend fun searchTMDB(query: String): List<TMDBItem> {
         return try {
             val response = tmdbApiService.searchMulti(query, TMDB_API_KEY)
-            response.results
+            response.results ?: emptyList()
         } catch (e: Exception) {
-            println("Error al buscar en TMDB: ${e.message}")
+            println("❌ Error en searchTMDB: ${e.message}")
             emptyList()
         }
     }
 
-    // Implementación de getItems()
+    override suspend fun getRecommendationsFromTMDB(mediaType: String, mediaId: Int): List<TMDBItem> {
+        return try {
+            val response = tmdbApiService.getRecommendations(mediaType, mediaId, TMDB_API_KEY)
+            response.results
+        } catch (_: Exception) {
+            emptyList()
+        }
+    }
+
     override suspend fun getItems(): List<Item> {
         return try {
             localApiService.getItems()
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             emptyList()
         }
     }

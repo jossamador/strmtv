@@ -10,4 +10,6 @@ interface ItemRepository {
     suspend fun searchLocal(query: String): List<Item>
 
     suspend fun searchTMDB(query: String): List<TMDBItem>
+
+    suspend fun getRecommendationsFromTMDB(mediaType: String, mediaId: Int): List<TMDBItem>
 }
