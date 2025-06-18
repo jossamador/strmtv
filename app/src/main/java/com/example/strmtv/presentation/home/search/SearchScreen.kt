@@ -114,7 +114,7 @@ fun EnhancedSearchHeader(
         OutlinedTextField(
             value = query,
             onValueChange = onQueryChange,
-            placeholder = { Text("TV Shows, Movies, Cast & Crew...") },
+            placeholder = { Text("Busca Películas, TV Shows y Más!") },
             leadingIcon = {
                 Icon(
                     imageVector = Icons.Default.Search,
