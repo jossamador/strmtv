@@ -48,10 +48,15 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun GreetingPreview() {
     StrmtvTheme {
-        Text(
-            text = "Hello Strmtv!",
-            fontSize = 20.sp,
-            color = Color.White // Fondo oscuro → texto blanco
-        )
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.background
+        ) {
+            Text(
+                text = "Hello Strmtv!",
+                fontSize = 20.sp,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+        }
     }
 }
