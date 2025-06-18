@@ -1,7 +1,6 @@
 package com.example.strmtv.presentation.home.detail
 
 import android.content.Intent
-import android.net.Uri
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -24,6 +23,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import com.example.strmtv.presentation.home.RecommendationsUiState
+import androidx.core.net.toUri
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -94,7 +94,7 @@ fun DetailScreen(
                     Text("Tipo: ${item.type}", style = MaterialTheme.typography.bodySmall)
                     Text("Media: ${item.mediaType}", style = MaterialTheme.typography.bodySmall)
                     Text("⭐ ${item.rating} (${item.voteCount} votos)", style = MaterialTheme.typography.bodySmall)
-                    Text("Duración: ${item.duration ?: "No disponible"}", style = MaterialTheme.typography.bodySmall)
+                    Text("Duración: ${item.duration?.ifBlank { "No disponible" }}", style = MaterialTheme.typography.bodySmall)
                 }
             }
 
@@ -135,13 +135,17 @@ fun DetailScreen(
                     Spacer(modifier = Modifier.height(16.dp))
                 }
 
+
                 item.trailerUrl?.takeIf { it.isNotBlank() }?.let { url ->
                     Text(
                         text = "Ver tráiler",
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.clickable {
-                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                            val intent = Intent(Intent.ACTION_VIEW, url.toUri()).apply {
+                                addCategory(Intent.CATEGORY_BROWSABLE)
+                                setPackage("com.android.chrome")
+                            }
                             context.startActivity(intent)
                         }
                     )
