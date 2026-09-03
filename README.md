@@ -114,6 +114,3 @@ app/
                 │
                 └── MainActivity.kt
 
-
-<img width="400" height="225" alt="StrmTV - Gif" src="https://github.com/user-attachments/assets/b31b3440-cfe1-4961-9418-1796a39beef6" />
-
